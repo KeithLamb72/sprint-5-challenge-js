@@ -53,17 +53,19 @@ function createLearnerCard(learner, infoText) {
     </div>
   `;
 
-  card.querySelector('.toggle-mentors').addEventListener('click', function(event) {
+  const toggleMentors = card.querySelector('.toggle-mentors');
+  const mentorList = card.querySelector('.mentor-list');
+  const learnerId = card.querySelector('.learner-id');
+
+  toggleMentors.addEventListener('click', function(event) {
     event.stopPropagation();
-    const mentorList = card.querySelector('.mentor-list');
     this.classList.toggle('closed');
-    this.textContent = this.classList.contains('closed') ? 'Mentors' : 'Hide Mentors';
     mentorList.classList.toggle('hidden');
+    this.textContent = mentorList.classList.contains('hidden') ? 'Mentors' : 'Hide Mentors';
   });
 
   card.addEventListener('click', () => {
     const selectedCard = document.querySelector('.card.selected');
-    const learnerId = card.querySelector('.learner-id');
     if (selectedCard && selectedCard !== card) {
       selectedCard.classList.remove('selected');
       selectedCard.querySelector('.learner-id').classList.add('hidden');
@@ -74,7 +76,6 @@ function createLearnerCard(learner, infoText) {
   });
 
   return card;
-  
   // 👆 WORK WORK ABOVE THIS LINE 👆
 }
 
