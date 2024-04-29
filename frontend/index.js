@@ -4,67 +4,83 @@ async function sprintChallenge5() { // Note the async keyword, in case you wish 
   const currentYear = new Date().getFullYear();
   footer.textContent = `© BLOOM INSTITUTE OF TECHNOLOGY ${currentYear}`;
 
+  const infoParagraph = document.querySelector('.info');
+  const cardsContainer = document.querySelector('.cards');
+
+  const endpointLearners = 'http://localhost:3003/api/learners';
+  const endpointMentors = 'http://localhost:3003/api/mentors';
+
   try {
-      const learnersResponse = await fetch('http://localhost:3003/api/learners').then(res => res.json());
-      const mentorsResponse = await fetch('http://localhost:3003/api/mentors').then(res => res.json());
+    const [learnersResponse, mentorsResponse] = await Promise.all([
+      fetch(endpointLearners).then(res => res.json()),
+      fetch(endpointMentors).then(res => res.json())
+    ]);
 
-      const mentorsById = mentorsResponse.reduce((acc, mentor) => {
-          acc[mentor.id] = mentor.name || "Mentor not found";
-          return acc;
-      }, {});
+    const mentorsById = mentorsResponse.reduce((acc, mentor) => {
+      acc[mentor.id] = mentor.name;
+      return acc;
+    }, {});
 
-      const learnersWithMentors = learnersResponse.map(learner => ({
-          ...learner,
-          mentors: learner.mentors.map(mentorId => mentorsById[mentorId])
-      }));
+    const learnersWithMentors = learnersResponse.map(learner => ({
+      ...learner,
+      mentors: learner.mentors.map(mentorId => mentorsById[mentorId] || 'Mentor not found')
+    }));
 
-      const cardsContainer = document.querySelector('.cards');
-      learnersWithMentors.forEach(learner => {
-          cardsContainer.appendChild(createLearnerCard(learner));
-      });
+    learnersWithMentors.forEach(learner => {
+      cardsContainer.appendChild(createLearnerCard(learner, infoParagraph));
+    });
+
+    infoParagraph.textContent = "No learner is selected";
+
   } catch (error) {
-      console.error('Failed to fetch data:', error);
+    console.log('Failed to fetch data:', error);
+    infoParagraph.textContent = "Failed to fetch learner cards";
   }
 }
 
-function createLearnerCard(learner) {
+function createLearnerCard(learner, infoParagraph) {
   const card = document.createElement('div');
   card.className = 'card';
   card.innerHTML = `
-      <div class="learner-details">
-          <h3>${learner.fullName} <span class="learner-id hidden">ID: ${learner.id}</span></h3>
-          <div class="learner-email">${learner.email}</div>
-      </div>
-      <div class="mentor-details">
-          <h4 class="closed">Mentors</h4>
-          <ul class="mentor-list hidden">
-              ${learner.mentors.map(mentor => `<li>${mentor}</li>`).join('')}
-          </ul>
-      </div>
+    <div class="learner-details">
+      <h3>${learner.fullName} <span class="learner-id" style="display: none;">ID: ${learner.id}</span></h3>
+      <div class="learner-email">${learner.email}</div>
+    </div>
+    <div class="mentor-details">
+      <h4 class="toggle-mentors closed">Mentors</h4>
+      <ul class="mentor-list hidden">
+        ${learner.mentors.map(mentor => `<li>${mentor}</li>`).join('')}
+      </ul>
+    </div>
   `;
 
-  card.addEventListener('click', function(event) {
-      if (event.target.tagName !== 'H4') {
-          const isSelected = card.classList.contains('selected');
-          document.querySelectorAll('.card.selected').forEach(c => {
-              c.classList.remove('selected');
-              c.querySelector('.learner-id').classList.add('hidden');
-          });
+  const toggleMentors = card.querySelector('.toggle-mentors');
+  const mentorList = card.querySelector('.mentor-list');
+  const learnerIdSpan = card.querySelector('.learner-id');
 
-          if (!isSelected) {
-              card.classList.add('selected');
-              card.querySelector('.learner-id').classList.remove('hidden');
-              document.querySelector('.info').textContent = `The selected learner is ${learner.fullName}`;
-          } else {
-              document.querySelector('.info').textContent = 'No learner is selected';
-          }
-      }
+  toggleMentors.addEventListener('click', function(event) {
+    const isOpen = this.classList.contains('open');
+    this.classList.toggle('open', !isOpen);
+    this.classList.toggle('closed', isOpen);
+    mentorList.style.display = isOpen ? 'none' : 'block';
+    event.stopPropagation(); // Prevent event bubbling to card click
   });
 
-  card.querySelector('h4').addEventListener('click', function() {
-      this.classList.toggle('open');
-      this.classList.toggle('closed');
-      this.nextElementSibling.classList.toggle('hidden');
+  card.addEventListener('click', () => {
+    const previouslySelectedCard = document.querySelector('.card.selected');
+    if (previouslySelectedCard && previouslySelectedCard !== card) {
+      previouslySelectedCard.classList.remove('selected');
+      const previousIdSpan = previouslySelectedCard.querySelector('.learner-id');
+      if (previousIdSpan) {
+        previousIdSpan.style.display = 'none';
+      }
+      infoParagraph.textContent = "No learner is selected";
+    }
+
+    card.classList.toggle('selected');
+    const isSelected = card.classList.contains('selected');
+    learnerIdSpan.style.display = isSelected ? '' : 'none';
+    infoParagraph.textContent = isSelected ? `The selected learner is ${learner.fullName}` : "No learner is selected";
   });
 
   return card;
