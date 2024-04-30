@@ -4,18 +4,18 @@ async function sprintChallenge5() { // Note the async keyword, in case you wish 
   const infoParagraph = document.querySelector('.info');
   const cardsContainer = document.querySelector('.cards');
 
-  // Update the footer with the current year for task [6]
+  // Update the footer with the current year
   const currentYear = new Date().getFullYear();
-  footer.textContent = `© BLOOM INSTITUTE OF TECHNOLOGY ${currentYear}`;
+  if (footer) {
+    footer.textContent = `© BLOOM INSTITUTE OF TECHNOLOGY ${currentYear}`;
+  }
 
   try {
-    // Fetch data from API for learners and mentors
     const [learnersResponse, mentorsResponse] = await Promise.all([
       axios.get('http://localhost:3003/api/learners'),
       axios.get('http://localhost:3003/api/mentors')
     ]);
 
-    // Prepare learner cards
     const learners = learnersResponse.data.map(learner => {
       const mentors = learner.mentors.map(id =>
         mentorsResponse.data.find(mentor => mentor.id === id) || { firstName: 'Mentor', lastName: 'Not found' }
@@ -26,34 +26,36 @@ async function sprintChallenge5() { // Note the async keyword, in case you wish 
       };
     });
 
-    // Update UI with learners' data
     learners.forEach(learner => {
       const card = createLearnerCard(learner);
-      cardsContainer.appendChild(card);
+      if (cardsContainer) {
+        cardsContainer.appendChild(card);
+      }
     });
 
-    // Set info text after rendering cards, as required by task [7]
-    infoParagraph.textContent = 'No learner is selected';
+    if (infoParagraph) {
+      infoParagraph.textContent = 'No learner is selected';
+    }
 
   } catch (error) {
-    // Handle errors in fetching data
-    infoParagraph.textContent = 'Error fetching learner cards';
+    if (infoParagraph) {
+      infoParagraph.textContent = 'Error fetching learner cards';
+    }
   }
 
-  // Function to create a single learner card
   function createLearnerCard(learner) {
     const card = document.createElement('div');
-    card.className = 'card'; // Ensure it has only one class for task [9]
+    card.className = 'card';
 
     const nameElement = document.createElement('h3');
-    nameElement.textContent = learner.fullName; // Correct name for task [10]
+    nameElement.textContent = learner.fullName;
 
     const emailElement = document.createElement('div');
-    emailElement.textContent = learner.email; // Correct email display for task [11]
+    emailElement.textContent = learner.email;
 
     const mentorsList = document.createElement('ul');
-    mentorsList.textContent = 'Mentors'; // Header for mentors list for task [12]
-    mentorsList.style.display = 'none'; // Mentors are hidden on page load for task [15]
+    mentorsList.textContent = 'Mentors';
+    mentorsList.style.display = 'none';
 
     learner.mentorNames.forEach(name => {
       const mentorItem = document.createElement('li');
@@ -65,16 +67,14 @@ async function sprintChallenge5() { // Note the async keyword, in case you wish 
     card.appendChild(emailElement);
     card.appendChild(mentorsList);
 
-    // Interactivity for selecting a card
     card.addEventListener('click', () => {
-      // Toggle class 'selected' and show/hide mentors
       const isSelected = card.classList.contains('selected');
       document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
       mentorsList.style.display = isSelected ? 'none' : 'block';
       card.classList.toggle('selected', !isSelected);
-
-      // Update info text based on selection
-      infoParagraph.textContent = isSelected ? 'No learner is selected' : `The selected learner is ${learner.fullName}`;
+      if (infoParagraph) {
+        infoParagraph.textContent = isSelected ? 'No learner is selected' : `The selected learner is ${learner.fullName}`;
+      }
     });
 
     return card;
