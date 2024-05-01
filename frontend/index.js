@@ -4,7 +4,6 @@ async function sprintChallenge5() { // Note the async keyword, in case you wish 
     const infoParagraph = document.querySelector('.info');
     const cardsContainer = document.querySelector('.cards');
 
-    // Update the footer with the current year
     const currentYear = new Date().getFullYear();
     if (footer) {
         footer.textContent = `© BLOOM INSTITUTE OF TECHNOLOGY ${currentYear}`;
